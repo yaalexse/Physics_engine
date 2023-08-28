@@ -4,6 +4,8 @@
 #include <SDL2/SDL_image.h>
 #include <sstream>
 
+#define PI 3.14159265
+
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 700;
 
@@ -18,25 +20,87 @@ class Moment{
     float value;
 };
 
-
 class Disk{
     public:
     Disk();
     //initializes future texture
     ~Disk();
     //deallocate memory
-    private:
-    float angle;
-    float angular_velocity;
-    float angular_acc;
+    void free();
     float x;
     float y;
+    float angular_velocity;
+    private:
+    float angle;
+    float angular_acc;
     float vx;
     float vy;
     float ax;
     float ay;
     float mass;
 };
+
+Disk::Disk(){
+    angle = 0.0;
+    angular_velocity = 0.0;
+    angular_acc = 0.0;
+    x = SCREEN_WIDTH / 2;
+    y = SCREEN_HEIGHT / 2;
+    vx = 0.0;
+    vy = 0.0;
+    ax = 0.0;
+    ay = 0.0;
+    mass = 0.0;
+}
+
+void Disk::free(){
+    angle = 0.0;
+    angular_velocity = 0.0;
+    angular_acc = 0.0;
+    x = 0.0;
+    y = 0.0;
+    vx = 0.0;
+    vy = 0.0;
+    ax = 0.0;
+    ay = 0.0;
+    mass = 0.0;
+}
+
+class Map{
+    public:
+    //Initialize
+    Map();
+    //Deallocate memory
+    ~Map();
+    void free();
+    int getNumDisk();
+    int NumDisk = 0;
+    Disk* PopDisk = ( Disk *)malloc( sizeof( Disk ) * NumDisk);
+};
+
+Map::Map(){
+    printf("How much disk(s) are on the map?\n");
+    scanf("%d",&NumDisk);
+}
+
+void Map::free(){
+    if(PopDisk != NULL){
+        int i;
+        for(i=0;i<=NumDisk;i++){
+            PopDisk[i].free();
+        }
+        PopDisk = NULL;
+    }
+    NumDisk = 0;
+}
+
+Map::~Map(){
+    free();
+}
+
+int Map::getNumDisk(){
+    return NumDisk;
+}
 
 class DiskTexture{
     public:
@@ -58,6 +122,7 @@ class DiskTexture{
     int dHeight;
 };
 
+//Here we declare one DiskTexture but it could be used multiple times as we may have more than one disk
 DiskTexture gDiskTexture;
 
 SDL_Window* gWindow = NULL;
@@ -190,7 +255,7 @@ bool init(){
 bool loadMedia(){
     //Loading success flag
     bool success = true;
-    if( !gDiskTexture.loadFromFile( "./disk0.bmp" ) ){
+    if( !gDiskTexture.loadFromFile( "./disk1.bmp" ) ){
         printf(" Failed to load disk texture! \n" );
         success = false;
     }
@@ -211,8 +276,23 @@ void close(){
 
 }
 
+//rad/s speed to angular velocity for animation
+//do
+//rad/s -> rad/ms
+//rad/ms -> deg/ms
+float constAngularVelocity( float speed ){
+    return fmod( speed * SDL_GetTicks() * 0.001 * 180 / PI, 360.0 );
+}
+
 int main(int argc, char* args[]){
     //Start up and create window
+    Map map;
+    int i;
+    for(i=0;i<=map.NumDisk;i++){
+        map.PopDisk[i].x =  50 * i;
+        map.PopDisk[i].y =  400;
+        map.PopDisk[i].angular_velocity = 0.5 * i;
+    }
     if( !init() ){
         printf("Failed to initialize!\n");
     }
@@ -235,7 +315,9 @@ int main(int argc, char* args[]){
                 }
                 SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, 0xFF);
                 SDL_RenderClear( gRenderer );
-                gDiskTexture.render(100,100, fmod(0.5* SDL_GetTicks(), 360.0));
+                for(i=1;i<=map.NumDisk;i++){
+                    gDiskTexture.render(map.PopDisk[i-1].x,map.PopDisk[i-1].y, constAngularVelocity( map.PopDisk[i-1].angular_velocity ));
+                }
                 SDL_RenderPresent( gRenderer );
             }
 
