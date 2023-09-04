@@ -23,7 +23,6 @@ class Moment{
 class Disk{
     public:
     Disk();
-    //initializes future texture
     ~Disk();
     //deallocate memory
     void free();
@@ -73,12 +72,13 @@ class Map{
     //Deallocate memory
     ~Map();
     void free();
-    int getNumDisk();
     int NumDisk = 0;
     Disk* PopDisk = ( Disk *)malloc( sizeof( Disk ) * NumDisk);
 };
 
 Map::Map(){
+    //When map is created in the main function, it automatically ask user for NumDisk
+    //So later in the main it can be used just after the declaration Map map;
     printf("How much disk(s) are on the map?\n");
     scanf("%d",&NumDisk);
 }
@@ -98,9 +98,6 @@ Map::~Map(){
     free();
 }
 
-int Map::getNumDisk(){
-    return NumDisk;
-}
 
 class DiskTexture{
     public:
@@ -256,7 +253,7 @@ bool loadMedia(){
     //Loading success flag
     bool success = true;
     if( !gDiskTexture.loadFromFile( "./disk1.bmp" ) ){
-        printf(" Failed to load disk texture! \n" );
+        printf("Failed to load disk texture! \n" );
         success = false;
     }
     return success;
@@ -289,8 +286,8 @@ int main(int argc, char* args[]){
     Map map;
     int i;
     for(i=0;i<=map.NumDisk;i++){
-        map.PopDisk[i].x =  50 * i;
-        map.PopDisk[i].y =  400;
+        map.PopDisk[i].x =  110 * i;
+        map.PopDisk[i].y =  700;
         map.PopDisk[i].angular_velocity = 0.5 * i;
     }
     if( !init() ){
@@ -298,7 +295,7 @@ int main(int argc, char* args[]){
     }
     else{
         if( !loadMedia() ){
-            printf(" Failed to load media!\n");
+            printf("Failed to load media!\n");
         }
         else{
             //Main loop flag
@@ -316,7 +313,7 @@ int main(int argc, char* args[]){
                 SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, 0xFF);
                 SDL_RenderClear( gRenderer );
                 for(i=1;i<=map.NumDisk;i++){
-                    gDiskTexture.render(map.PopDisk[i-1].x,map.PopDisk[i-1].y, constAngularVelocity( map.PopDisk[i-1].angular_velocity ));
+                    gDiskTexture.render(450,300, constAngularVelocity( map.PopDisk[i-1].angular_velocity ));
                 }
                 SDL_RenderPresent( gRenderer );
             }
